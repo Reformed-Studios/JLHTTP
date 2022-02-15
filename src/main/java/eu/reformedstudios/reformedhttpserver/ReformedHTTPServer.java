@@ -19,7 +19,7 @@
  *  For additional info see http://www.freeutils.net/source/jlhttp/
  */
 
-package net.freeutils.httpserver;
+package eu.reformedstudios.reformedhttpserver;
 
 import java.io.*;
 import java.lang.annotation.*;
@@ -29,6 +29,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 import javax.net.ServerSocketFactory;
@@ -122,7 +124,7 @@ import javax.net.ssl.SSLSocket;
  * @author Amichai Rothman
  * @since  2008-07-24
  */
-public class HTTPServer {
+public class ReformedHTTPServer {
 
     /**
      * The SimpleDateFormat-compatible formats of dates which must be supported.
@@ -1461,7 +1463,7 @@ public class HTTPServer {
          * @return the request parameters name-value pairs,
          *         or an empty list if there are none
          * @throws IOException if an error occurs
-         * @see HTTPServer#parseParamsList(String)
+         * @see ReformedHTTPServer#parseParamsList(String)
          */
         public List<String[]> getParamsList() throws IOException {
             List<String[]> queryParams = parseParamsList(uri.getRawQuery());
@@ -1552,8 +1554,8 @@ public class HTTPServer {
          */
         public VirtualHost getVirtualHost() {
             return host != null ? host
-                : (host = HTTPServer.this.getVirtualHost(getBaseURL().getHost())) != null ? host
-                : (host = HTTPServer.this.getVirtualHost(null));
+                : (host = ReformedHTTPServer.this.getVirtualHost(getBaseURL().getHost())) != null ? host
+                : (host = ReformedHTTPServer.this.getVirtualHost(null));
         }
 
         /**
@@ -1767,7 +1769,7 @@ public class HTTPServer {
          * as the body. The text is sent in the UTF-8 charset. If a
          * Content-Type header was not explicitly set, it will be set to
          * text/html, and so the text must contain valid (and properly
-         * {@link HTTPServer#escapeHTML escaped}) HTML.
+         * {@link ReformedHTTPServer#escapeHTML escaped}) HTML.
          *
          * @param status the response status
          * @param text the text body (sent as text/html)
@@ -1787,7 +1789,7 @@ public class HTTPServer {
          * Sends an error response with the given status and detailed message.
          * An HTML body is created containing the status and its description,
          * as well as the message, which is escaped using the
-         * {@link HTTPServer#escapeHTML escape} method.
+         * {@link ReformedHTTPServer#escapeHTML escape} method.
          *
          * @param status the response status
          * @param text the text body (sent as text/html)
@@ -1869,7 +1871,7 @@ public class HTTPServer {
         public void run() {
             setName(getClass().getSimpleName() + "-" + port);
             try {
-                ServerSocket serv = HTTPServer.this.serv; // keep local to avoid NPE when stopped
+                ServerSocket serv = ReformedHTTPServer.this.serv; // keep local to avoid NPE when stopped
                 while (serv != null && !serv.isClosed()) {
                     final Socket sock = serv.accept();
                     executor.execute(new Runnable() {
@@ -1914,7 +1916,7 @@ public class HTTPServer {
      *
      * @param port the port on which this server will accept connections
      */
-    public HTTPServer(int port) {
+    public ReformedHTTPServer(int port) {
         setPort(port);
         addVirtualHost(new VirtualHost(null)); // add default virtual host
     }
@@ -1923,7 +1925,7 @@ public class HTTPServer {
      * Constructs an HTTPServer which can accept connections on the default HTTP port 80.
      * Note: the {@link #start()} method must be called to start accepting connections.
      */
-    public HTTPServer() {
+    public ReformedHTTPServer() {
         this(80);
     }
 
@@ -2905,7 +2907,19 @@ public class HTTPServer {
      */
     public static int serveFile(File base, String context,
             Request req, Response resp) throws IOException {
-        String relativePath = req.getPath().substring(context.length());
+        String path = req.getPath();
+        if(!path.contains(".")) path += "/index.html";
+        System.out.println(path);
+        Pattern p = Pattern.compile("(/)(?!.*/)(\\w+.\\w+)");
+        Matcher m = p.matcher(path);
+        if(!m.find()) {
+            return 500;
+        }
+        String relativePath = m.group(2);
+        if(m.group(0) == null) {
+            return 500;
+        }
+        System.out.println(relativePath);
         File file = new File(base, relativePath).getCanonicalFile();
         if (!file.exists() || file.isHidden() || file.getName().startsWith(".")) {
             return 404;
@@ -3052,7 +3066,7 @@ public class HTTPServer {
             if (args.length == 0) {
                 System.err.printf("Usage: java [-options] %s <directory> [port]%n" +
                     "To enable SSL: specify options -Djavax.net.ssl.keyStore, " +
-                    "-Djavax.net.ssl.keyStorePassword, etc.%n", HTTPServer.class.getName());
+                    "-Djavax.net.ssl.keyStorePassword, etc.%n", ReformedHTTPServer.class.getName());
                 return;
             }
             File dir = new File(args[0]);
@@ -3063,7 +3077,7 @@ public class HTTPServer {
             for (File f : Arrays.asList(new File("/etc/mime.types"), new File(dir, ".mime.types")))
                 if (f.exists())
                     addContentTypes(new FileInputStream(f));
-            HTTPServer server = new HTTPServer(port);
+            ReformedHTTPServer server = new ReformedHTTPServer(port);
             if (System.getProperty("javax.net.ssl.keyStore") != null) // enable SSL if configured
                 server.setServerSocketFactory(SSLServerSocketFactory.getDefault());
             VirtualHost host = server.getVirtualHost(null); // default host
