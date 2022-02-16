@@ -2909,16 +2909,13 @@ public class ReformedHTTPServer {
             Request req, Response resp) throws IOException {
         String path = req.getPath();
         if(!path.contains(".")) path += "/index.html";
-        System.out.println(path);
-        Pattern p = Pattern.compile("(/)(?!.*/)(\\w+.\\w+)");
+        Pattern p = Pattern.compile("(?!.*/)(\\w+.\\w+.\\w+)");
         Matcher m = p.matcher(path);
         if(!m.find()) {
             return 500;
         }
-        String relativePath = m.group(2);
-        if(m.group(0) == null) {
-            return 500;
-        }
+        String relativePath = m.group();
+
         System.out.println(relativePath);
         File file = new File(base, relativePath).getCanonicalFile();
         if (!file.exists() || file.isHidden() || file.getName().startsWith(".")) {
