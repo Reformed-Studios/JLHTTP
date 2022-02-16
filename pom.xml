@@ -6,7 +6,7 @@
 
     <groupId>eu.reformedstudios</groupId>
     <artifactId>reformedhttpserver</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
 
     <name>JLHTTP</name>
     <description>The Java Lightweight HTTP Server</description>
@@ -47,6 +47,19 @@
                     </archive>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -56,6 +69,8 @@
             <url>https://repo.reformedstudios.eu/releases</url>
         </repository>
     </distributionManagement>
+
+
 
     <profiles>
         <!--
